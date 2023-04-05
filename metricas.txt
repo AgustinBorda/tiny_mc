@@ -1,0 +1,4 @@
+fotones / segundo
+flops / ips (ver que onda) 
+instrucciones por ciclo
+tiempo
