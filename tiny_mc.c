@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+//TODO: Comentar esto
 char t1[] = "Tiny Monte Carlo by Scott Prahl (http://omlc.ogi.edu)";
 char t2[] = "1 W Point Source Heating in Infinite Isotropic Scattering Medium";
 char t3[] = "CPU version, adapted for PEAGPGPU by Gustavo Castellano"
@@ -32,6 +33,8 @@ static float heat2[SHELLS];
 
 static void photon(void)
 {
+ 
+    //TODO: Mover esto afuera de la funcion photon
     const float albedo = MU_S / (MU_S + MU_A);
     const float shells_per_mfp = 1e4 / MICRONS_PER_SHELL / (MU_A + MU_S);
 
@@ -44,8 +47,10 @@ static void photon(void)
     float w = 1.0f;
     float weight = 1.0f;
 
+
+    //TODO: Loop unrolling primera iteracion
     for (;;) {
-        float t = -logf(rand() / (float)RAND_MAX); /* move */
+        float t = -logf(rand() / (float)RAND_MAX) / (MU_A+MU_S); /* move */
         x += t * u;
         y += t * v;
         z += t * w;
@@ -61,6 +66,7 @@ static void photon(void)
         /* New direction, rejection method */
         float xi1, xi2;
         do {
+            //TODO: RAND_MAX - 1.0f se puede poner en una sola variable
             xi1 = 2.0f * rand() / (float)RAND_MAX - 1.0f;
             xi2 = 2.0f * rand() / (float)RAND_MAX - 1.0f;
             t = xi1 * xi1 + xi2 * xi2;
@@ -70,9 +76,9 @@ static void photon(void)
         w = xi2 * sqrtf((1.0f - u * u) / t);
 
         if (weight < 0.001f) { /* roulette */
-            if (rand() / (float)RAND_MAX > 0.1f)
+            if (rand() / (float)RAND_MAX > 0.1f) //TODO: ver que tanto se puede meter mano aca
                 break;
-            weight /= 0.1f;
+            weight /= 0.1f; //TODO: cambiar division por multiplicacion
         }
     }
 }
