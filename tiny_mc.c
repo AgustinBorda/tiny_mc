@@ -15,6 +15,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define MU_T (MU_A + MU_S)
+#define ALBEDO (MU_S / MU_T)
+#define SHELLS_PER_MFP (1e4 / MICRONS_PER_SHELL / MU_T)
+
+
 //TODO: Comentar esto
 char t1[] = "Tiny Monte Carlo by Scott Prahl (http://omlc.ogi.edu)";
 char t2[] = "1 W Point Source Heating in Infinite Isotropic Scattering Medium";
@@ -34,10 +39,6 @@ static float heat2[SHELLS];
 static void photon(void)
 {
  
-    //TODO: Mover esto afuera de la funcion photon
-    const float albedo = MU_S / (MU_S + MU_A);
-    const float shells_per_mfp = 1e4 / MICRONS_PER_SHELL / (MU_A + MU_S);
-
     /* launch */
     float x = 0.0f;
     float y = 0.0f;
@@ -50,18 +51,19 @@ static void photon(void)
 
     //TODO: Loop unrolling primera iteracion
     for (;;) {
-        float t = -logf(rand() / (float)RAND_MAX) / (MU_A+MU_S); /* move */
+        float t = -logf(rand() / (float)RAND_MAX) / (MU_T); /* move */
         x += t * u;
         y += t * v;
         z += t * w;
 
-        unsigned int shell = sqrtf(x * x + y * y + z * z) * shells_per_mfp; /* absorb */
+        unsigned int shell = sqrtf(x * x + y * y + z * z) * SHELLS_PER_MFP; /* absorb */
         if (shell > SHELLS - 1) {
             shell = SHELLS - 1;
         }
-        heat[shell] += (1.0f - albedo) * weight;
-        heat2[shell] += (1.0f - albedo) * (1.0f - albedo) * weight * weight; /* add up squares */
-        weight *= albedo;
+        heat[shell] += (1.0f - ALBEDO) * weight;
+        //heat2[shell] += heat[shell] * heat[shell];
+        heat2[shell] += (1.0f - ALBEDO) * (1.0f - ALBEDO) * weight * weight; /* add up squares */
+        weight *= ALBEDO;
 
         /* New direction, rejection method */
         float xi1, xi2;
@@ -78,7 +80,7 @@ static void photon(void)
         if (weight < 0.001f) { /* roulette */
             if (rand() / (float)RAND_MAX > 0.1f) //TODO: ver que tanto se puede meter mano aca
                 break;
-            weight /= 0.1f; //TODO: cambiar division por multiplicacion
+            weight *= 10; //TODO: cambiar division por multiplicacion
         }
     }
 }
