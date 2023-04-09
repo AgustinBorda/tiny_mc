@@ -22,9 +22,30 @@ char t3[] = "CPU version, adapted for PEAGPGPU by Gustavo Castellano"
             " and Nicolas Wolovick";
 
 
+static unsigned int g_seed;
+
 // global state, heat and heat square in each shell
 static float heat[SHELLS];
 static float heat2[SHELLS];
+
+
+//################  FUNCIONES PARA FAST_RAND() ###########
+
+// Used to seed the generator. 
+          
+void fast_srand(int seed) {
+    g_seed = seed;
+}
+
+// Compute a pseudorandom integer.
+// Output value in range [0, 32767]
+
+int fast_rand(void) {
+    g_seed = (214013*g_seed+2531011);
+    return (g_seed>>16)&0x7FFF;
+}    
+//##########################################################
+
 
 const float albedo = MU_S / (MU_S + MU_A);
 const float shells_per_mfp = 1e4 / MICRONS_PER_SHELL / (MU_A + MU_S);
@@ -108,23 +129,6 @@ static void photon(void)
         }
     }
 }
-
-//################  FUNCIONES PARA FAST_RAND() ###########
-
-// Used to seed the generator. 
-          
-void fast_srand(int seed) {
-    g_seed = seed;
-    }
-
-// Compute a pseudorandom integer.
-// Output value in range [0, 32767]
-
-int fast_rand(void) {
-    g_seed = (214013*g_seed+2531011);
-    return (g_seed>>16)&0x7FFF;
-    }    
-//##########################################################
 
 
 /***
