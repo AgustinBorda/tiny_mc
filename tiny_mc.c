@@ -91,11 +91,6 @@ static void photon(void)
      v = xi1 * sqrtf((1.0f - u * u) / t);
      w = xi2 * sqrtf((1.0f - u * u) / t);
 
-     if (weight < 0.001f) { /* roulette */
-        if (fast_rand() / (float)32767.0 > 0.1f)
-                return;
-        weight /= 0.1f;
-     }
 
     for (;;) {
         t = -logf(fast_rand() / (float)32767.0) / (MU_A+MU_S); /* move */
