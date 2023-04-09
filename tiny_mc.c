@@ -47,7 +47,7 @@ static void photon(void)
     float w = 1.0f;
     float weight = 1.0f;
 
-    float t = -logf(rand() / (float)RAND_MAX) / (MU_A+MU_S); /* move */
+    float t = -logf(fast_rand() / (float)32767.0) / (MU_A+MU_S); /* move */
     z += t * w;
 
     unsigned int shell = sqrtf(t) * shells_per_mfp; /* absorb */
@@ -62,8 +62,8 @@ static void photon(void)
      float xi1, xi2;
      do {
         //TODO: RAND_MAX - 1.0f se puede poner en una sola variable
-        xi1 = 2.0f * rand() / (float)RAND_MAX - 1.0f;
-        xi2 = 2.0f * rand() / (float)RAND_MAX - 1.0f;
+        xi1 = 2.0f * fast_rand() / (float)32767.0 - 1.0f;
+        xi2 = 2.0f * fast_rand() / (float)32767.0 - 1.0f;
         t = xi1 * xi1 + xi2 * xi2;
      } while (1.0f < t);
      u = 2.0f * t - 1.0f;
@@ -71,13 +71,13 @@ static void photon(void)
      w = xi2 * sqrtf((1.0f - u * u) / t);
 
      if (weight < 0.001f) { /* roulette */
-        if (rand() / (float)RAND_MAX > 0.1f)
+        if (fast_rand() / (float)32767.0 > 0.1f)
                 return;
         weight /= 0.1f;
      }
 
     for (;;) {
-        t = -logf(rand() / (float)RAND_MAX) / (MU_A+MU_S); /* move */
+        t = -logf(fast_rand() / (float)32767.0) / (MU_A+MU_S); /* move */
         x += t * u;
         y += t * v;
         z += t * w;
@@ -93,8 +93,8 @@ static void photon(void)
         /* New direction, rejection method */
         do {
             //TODO: RAND_MAX - 1.0f se puede poner en una sola variable
-            xi1 = 2.0f * rand() / (float)RAND_MAX - 1.0f;
-            xi2 = 2.0f * rand() / (float)RAND_MAX - 1.0f;
+            xi1 = 2.0f * fast_rand() / (float)32767.0 - 1.0f;
+            xi2 = 2.0f * fast_rand() / (float)32767.0 - 1.0f;
             t = xi1 * xi1 + xi2 * xi2;
         } while (1.0f < t);
         u = 2.0f * t - 1.0f;
@@ -102,12 +102,29 @@ static void photon(void)
         w = xi2 * sqrtf((1.0f - u * u) / t);
 
         if (weight < 0.001f) { /* roulette */
-            if (rand() / (float)RAND_MAX > 0.1f) //TODO: ver que tanto se puede meter mano aca
+            if (fast_rand() / (float)32767.0 > 0.1f) //TODO: ver que tanto se puede meter mano aca
                 break;
             weight /= 0.1f; //TODO: cambiar division por multiplicacion
         }
     }
 }
+
+//################  FUNCIONES PARA FAST_RAND() ###########
+
+// Used to seed the generator. 
+          
+void fast_srand(int seed) {
+    g_seed = seed;
+    }
+
+// Compute a pseudorandom integer.
+// Output value in range [0, 32767]
+
+int fast_rand(void) {
+    g_seed = (214013*g_seed+2531011);
+    return (g_seed>>16)&0x7FFF;
+    }    
+//##########################################################
 
 
 /***
@@ -123,7 +140,7 @@ int main(void)
     printf("# Photons    = %8d\n#\n", PHOTONS);
 
     // configure RNG
-    srand(SEED);
+    fast_srand(SEED);
     // start timer
     double start = wtime();
     // simulation
