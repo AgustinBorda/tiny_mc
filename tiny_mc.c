@@ -72,7 +72,7 @@ static void photon(void)
 
      if (weight < 0.001f) { /* roulette */
         if (rand() / (float)RAND_MAX > 0.1f)
-                break;
+                return;
         weight /= 0.1f;
      }
 
