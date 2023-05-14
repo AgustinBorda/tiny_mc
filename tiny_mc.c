@@ -82,7 +82,6 @@ static void photon(void)
      /* New direction, rejection method */
      float xi1, xi2;
      do {
-        //TODO: RAND_MAX - 1.0f se puede poner en una sola variable
         xi1 = 2.0f * fast_rand() / (float)32767.0 - 1.0f;
         xi2 = 2.0f * fast_rand() / (float)32767.0 - 1.0f;
         t = xi1 * xi1 + xi2 * xi2;
@@ -106,9 +105,13 @@ static void photon(void)
         heat2[shell] += (1.0f - albedo) * (1.0f - albedo) * weight * weight; /* add up squares */
         weight *= albedo;
 
+        if (weight < 0.001f) { /* roulette */
+            if (fast_rand() / (float)32767.0 > 0.1f) //TODO: ver que tanto se puede meter mano aca
+                break;
+            weight /= 0.1f; //TODO: cambiar division por multiplicacion
+        }
         /* New direction, rejection method */
         do {
-            //TODO: RAND_MAX - 1.0f se puede poner en una sola variable
             xi1 = 2.0f * fast_rand() / (float)32767.0 - 1.0f;
             xi2 = 2.0f * fast_rand() / (float)32767.0 - 1.0f;
             t = xi1 * xi1 + xi2 * xi2;
@@ -116,12 +119,6 @@ static void photon(void)
         u = 2.0f * t - 1.0f;
         v = xi1 * sqrtf((1.0f - u * u) / t);
         w = xi2 * sqrtf((1.0f - u * u) / t);
-
-        if (weight < 0.001f) { /* roulette */
-            if (fast_rand() / (float)32767.0 > 0.1f) //TODO: ver que tanto se puede meter mano aca
-                break;
-            weight /= 0.1f; //TODO: cambiar division por multiplicacion
-        }
     }
 }
 
