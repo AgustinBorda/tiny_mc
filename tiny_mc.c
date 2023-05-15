@@ -231,11 +231,40 @@ void photon_mov(void)
 
 void photon_move_roullete() {
 	for(;;) {
-		photon_mov();
+		unsigned int vector[N] = {fast_rand(),fast_rand(),fast_rand(),fast_rand(),fast_rand(),fast_rand(),fast_rand(),fast_rand()};
+		for(size_t i=0; i<N; i++) {
+			t[i] = -logf(vector[i] / (float)32767.0) / (MU_A+MU_S); /* move */
+			x[i] += t[i] * u[i];
+			y[i] += t[i] * v[i];
+			z[i] += t[i] * w[i];
+
+		}
+		for(size_t i=0; i<N; i++) {
+			shell[i] = sqrtf(x[i] * x[i] + y[i] * y[i] + z[i] * z[i]) * shells_per_mfp; /* absorb */
+			shell[i] = (shell[i] > SHELLS-1) ? SHELLS-1 : shell[i];
+		}
+
+		for(size_t i=0; i<N; i++) {
+			heat[shell[i]] += (1.0f - albedo) * weight;
+			heat2[shell[i]] += (1.0f - albedo) * (1.0f - albedo) * weight * weight; /* add up squares */
+		}
+		weight *= albedo;
 		if (weight < 0.001f) { /* roulette */
 			if (fast_rand() / (float)32767.0 > 0.1f) //TODO: ver que tanto se puede meter mano aca
 				break;
 			weight /= 0.1f; //TODO: cambiar division por multiplicacion
+		}
+		for(size_t i=0; i<N; i++) {
+			do {
+				xi1[i] = 2.0f * fast_rand() / (float)32767.0 - 1.0f;
+				xi2[i] = 2.0f * fast_rand() / (float)32767.0 - 1.0f;
+				t[i] = xi1[i] * xi1[i] + xi2[i] * xi2[i];
+			} while (1.0 < t[i]);
+		}
+		for(size_t i=0; i<N; i++) {
+			u[i] = 2.0f * t[i] - 1.0f;
+			v[i] = xi1[i] * sqrtf((1.0f - u[i] * u[i]) / t[i]);
+			w[i] = xi2[i] * sqrtf((1.0f - u[i] * u[i]) / t[i]);
 		}
 	}
 }
@@ -273,7 +302,7 @@ int main(void)
 
 	printf("# %lf seconds\n", elapsed);
 	printf("# %lf K photons per second\n", 1e-3 * PHOTONS / elapsed);
-
+/*
 	printf("# Radius\tHeat\n");
 	printf("# [microns]\t[W/cm^3]\tError\n");
 	float t = 4.0f * M_PI * powf(MICRONS_PER_SHELL, 3.0f) * PHOTONS / 1e12;
@@ -283,6 +312,6 @@ int main(void)
 	sqrt(heat2[i] - heat[i] * heat[i] / PHOTONS) / t / (i * i + i + 1.0f / 3.0f));
 	}
 	printf("# extra\t%12.5f\n", heat[SHELLS - 1] / PHOTONS);
-	
+*/	
 	return 0;
 }
