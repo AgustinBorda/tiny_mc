@@ -182,13 +182,16 @@ const float shells_per_mfp = 1e4 / MICRONS_PER_SHELL / (MU_A + MU_S);
 
 void make_photons(void) {
 	for (size_t i=0; i<N; ++i) {
+		x[i] = .0f;
+		y[i] = .0f;
+		z[i] = .0f;
+		u[i] = .0f;
+		v[i] = .0f;
 		w[i] = 1.0f;
 	}
-}
-
-void init_photon_movement() {
 	weight = 1.0f;
 }
+
 
 void photon_mov(void)
 {
@@ -226,7 +229,12 @@ void photon_mov(void)
 }
 
 
-void move_photons_no_roullete() {
+void photon_move_roullete() {
+	for(;;) {
+		if(weight < 0.001)
+			break;
+		weight -= 0.01;
+	}
 }
 /***
  * Main matter
@@ -248,11 +256,12 @@ int main(void)
 	double start = wtime();
 	//simulation
 	for (unsigned int i = 0; i < PHOTONS/N; ++i) {
+		make_photons();
 		for(int k=0; k<100; k++){
-			make_photons();
-			init_photon_movement();
 			photon_mov();
 		}
+		photon_move_roullete();
+		
 	}
 	// stop timer
 	double end = wtime();
