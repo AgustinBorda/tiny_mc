@@ -143,18 +143,11 @@ struct photon {
 };
 
 //N photons:
-float x[N], y[N], z[N], u[N], v[N], w[N], weight[N], t[N], xi1[N], xi2[N];
-
+float x[N], y[N], z[N], u[N], v[N], w[N], t[N], xi1[N], xi2[N];
+float weight;
+unsigned int shell[N];
 float heat[SHELLS];
 float heat2[SHELLS];
-
-void make_photons(void) {
-	for (size_t i=0; i<N; ++i) {
-		w[i] = 1.0f;
-		weight[i] = 1.0f;
-	}
-}
-
 
 static unsigned int g_seed = SEED;
 
@@ -173,13 +166,9 @@ void fast_srand(int seed) {
 // Compute a pseudorandom integer.
 // Output value in range [0, 32767]
 
-void fast_rand(int* restrict a, const size_t n, unsigned int* seed) {
-	unsigned int s = *seed;
-	for (size_t i=0; i<n; i++) {
-		s = (214013*(s)+2531011);
-		a[i] = (s>>16)&0x7FFF;
-	}
-	*seed = s;
+int fast_rand(void) {
+	g_seed = (214013*g_seed+2531011);
+	return (g_seed>>16)&0x7FFF;
 }    
 //##########################################################
 
@@ -191,41 +180,47 @@ const float shells_per_mfp = 1e4 / MICRONS_PER_SHELL / (MU_A + MU_S);
  * Photon
  ***/
 
-static void photon(void)
+void make_photons(void) {
+	for (size_t i=0; i<N; ++i) {
+		w[i] = 1.0f;
+	}
+}
+
+void init_photon_movement() {
+	weight = 1.0f;
+}
+
+void photon_mov(void)
 {
+	unsigned int vector[N] = {fast_rand(),fast_rand(),fast_rand(),fast_rand(),fast_rand(),fast_rand(),fast_rand(),fast_rand()};
+	for(size_t i=0; i<N; i++) {
+		t[i] = -logf(vector[i] / (float)32767.0) / (MU_A+MU_S); /* move */
+		x[i] += t[i] * u[i];
+		y[i] += t[i] * v[i];
+		z[i] += t[i] * w[i];
 
-	for(unsigned int j=0;j<64;j++) {
-		float weight = 1.0f;
-		for(size_t i=0; i<N; i++) {
-			t[i] = -logf(42 / (float)32767.0) / (MU_A+MU_S); /* move */
-			x[i] += t[i] * u[i];
-			y[i] += t[i] * v[i];
-			z[i] += t[i] * w[i];
+	}
+	for(size_t i=0; i<N; i++) {
+		shell[i] = sqrtf(x[i] * x[i] + y[i] * y[i] + z[i] * z[i]) * shells_per_mfp; /* absorb */
+		shell[i] = (shell[i] > SHELLS-1) ? SHELLS-1 : shell[i];
+	}
 
-		}
-
-		for(size_t i=0; i<N; i++) {
-			unsigned int shell = sqrtf(x[i] * x[i] + y[i] * y[i] + z[i] * z[i]) * shells_per_mfp; /* absorb */
-			shell = (shell > SHELLS-1) ? SHELLS-1 : shell;
-			heat[shell] += (1.0f - albedo) * weight;
-			heat2[shell] += (1.0f - albedo) * (1.0f - albedo) * weight * weight; /* add up squares */
-		}
-		weight *= albedo;
-
-
-		for(size_t i=0; i<N; i++) {
-			do {
-				xi1[i] = 2.0f * 42 / (float)32767.0 - 1.0f;
-				xi2[i] = 2.0f * 42 / (float)32767.0 - 1.0f;
-				t[i] = xi1[i] * xi1[i] + xi2[i] * xi2[i];
-			} while (1.0f < t[i]);
-		}
-
-		for(size_t i=0; i<N; i++) {
-			u[i] = 2.0f * t[i] - 1.0f;
-			v[i] = xi1[i] * sqrtf((1.0f - u[i] * u[i]) / t[i]);
-			w[i] = xi2[i] * sqrtf((1.0f - u[i] * u[i]) / t[i]);
-		}
+	for(size_t i=0; i<N; i++) {
+		heat[shell[i]] += (1.0f - albedo) * weight;
+		heat2[shell[i]] += (1.0f - albedo) * (1.0f - albedo) * weight * weight; /* add up squares */
+	}
+	weight *= albedo;
+	for(size_t i=0; i<N; i++) {
+		do {
+			xi1[i] = 2.0f * fast_rand() / (float)32767.0 - 1.0f;
+			xi2[i] = 2.0f * fast_rand() / (float)32767.0 - 1.0f;
+			t[i] = xi1[i] * xi1[i] + xi2[i] * xi2[i];
+		} while (1.0 < t[i]);
+	}
+	for(size_t i=0; i<N; i++) {
+		u[i] = 2.0f * t[i] - 1.0f;
+		v[i] = xi1[i] * sqrtf((1.0f - u[i] * u[i]) / t[i]);
+		w[i] = xi2[i] * sqrtf((1.0f - u[i] * u[i]) / t[i]);
 	}
 
 }
@@ -239,13 +234,10 @@ void move_photons_no_roullete() {
 
 int main(void)
 {
-	photon();
+	//photon();
 	//long_jump();
-	for(int i=0; i< 64; i++) {
-		printf("%" PRIu64 "\n", s[i]);
-	}
 	// heading
-	/*	printf("# %s\n# %s\n# %s\n", t1, t2, t3);
+		printf("# %s\n# %s\n# %s\n", t1, t2, t3);
 		printf("# Scattering = %8.3f/cm\n", MU_S);
 		printf("# Absorption = %8.3f/cm\n", MU_A);
 		printf("# Photons    = %8d\n#\n", PHOTONS);
@@ -254,9 +246,13 @@ int main(void)
 	fast_srand(SEED);
 	// start timer
 	double start = wtime();
-	// simulation
-	for (unsigned int i = 0; i < PHOTONS; ++i) {
-	photon();
+	//simulation
+	for (unsigned int i = 0; i < PHOTONS/N; ++i) {
+		for(int k=0; k<100; k++){
+			make_photons();
+			init_photon_movement();
+			photon_mov();
+		}
 	}
 	// stop timer
 	double end = wtime();
@@ -266,7 +262,7 @@ int main(void)
 	printf("# %lf seconds\n", elapsed);
 	printf("# %lf K photons per second\n", 1e-3 * PHOTONS / elapsed);
 
-	printf("# Radius\tHeat\n");
+/*	printf("# Radius\tHeat\n");
 	printf("# [microns]\t[W/cm^3]\tError\n");
 	float t = 4.0f * M_PI * powf(MICRONS_PER_SHELL, 3.0f) * PHOTONS / 1e12;
 	for (unsigned int i = 0; i < SHELLS - 1; ++i) {
@@ -275,6 +271,6 @@ int main(void)
 	sqrt(heat2[i] - heat[i] * heat[i] / PHOTONS) / t / (i * i + i + 1.0f / 3.0f));
 	}
 	printf("# extra\t%12.5f\n", heat[SHELLS - 1] / PHOTONS);
-	*/
+*/	
 	return 0;
 }
