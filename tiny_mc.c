@@ -231,9 +231,12 @@ void photon_mov(void)
 
 void photon_move_roullete() {
 	for(;;) {
-		if(weight < 0.001)
-			break;
-		weight -= 0.01;
+		photon_mov();
+		if (weight < 0.001f) { /* roulette */
+			if (fast_rand() / (float)32767.0 > 0.1f) //TODO: ver que tanto se puede meter mano aca
+				break;
+			weight /= 0.1f; //TODO: cambiar division por multiplicacion
+		}
 	}
 }
 /***
@@ -257,7 +260,7 @@ int main(void)
 	//simulation
 	for (unsigned int i = 0; i < PHOTONS/N; ++i) {
 		make_photons();
-		for(int k=0; k<100; k++){
+		for(int k=0; k<72; k++){
 			photon_mov();
 		}
 		photon_move_roullete();
@@ -271,7 +274,7 @@ int main(void)
 	printf("# %lf seconds\n", elapsed);
 	printf("# %lf K photons per second\n", 1e-3 * PHOTONS / elapsed);
 
-/*	printf("# Radius\tHeat\n");
+	printf("# Radius\tHeat\n");
 	printf("# [microns]\t[W/cm^3]\tError\n");
 	float t = 4.0f * M_PI * powf(MICRONS_PER_SHELL, 3.0f) * PHOTONS / 1e12;
 	for (unsigned int i = 0; i < SHELLS - 1; ++i) {
@@ -280,6 +283,6 @@ int main(void)
 	sqrt(heat2[i] - heat[i] * heat[i] / PHOTONS) / t / (i * i + i + 1.0f / 3.0f));
 	}
 	printf("# extra\t%12.5f\n", heat[SHELLS - 1] / PHOTONS);
-*/	
+	
 	return 0;
 }
