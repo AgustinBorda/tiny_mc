@@ -23,6 +23,6 @@
 #endif
 
 #ifndef SEED
-#define SEED (time(NULL)) // random seed
+#define SEED 69 // random seed
 #endif
 

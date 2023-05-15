@@ -2,7 +2,7 @@
 CC = gcc
 
 # Flags
-CFLAGS = -std=c11 -Wall -Wextra
+CFLAGS = -std=c11 -Wall -Wextra -O1 -march=native -ftree-vectorize -fopt-info-vec -fopt-info-vec-missed -ffast-math
 LDFLAGS = -lm
 
 # Binary file
