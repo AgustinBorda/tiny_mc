@@ -2,7 +2,7 @@
 CC = gcc
 
 # Flags
-CFLAGS = -std=c11 -Wall -Wextra -O1 -march=native -ftree-vectorize -fopt-info-vec -fopt-info-vec-missed -ffast-math
+CFLAGS = -std=c11 -Wall -Wextra -Ofast -march=native -fopenmp -ftree-vectorize #-fopt-info-vec-missed -ffast-math
 LDFLAGS = -lm
 
 # Binary file
@@ -16,7 +16,8 @@ C_OBJS = $(patsubst %.c, %.o, $(C_SOURCES))
 all: $(TARGET)
 
 $(TARGET): $(C_OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) 
+
 
 clean:
 	rm -f $(TARGET) *.o
