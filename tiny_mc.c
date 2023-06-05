@@ -93,8 +93,9 @@ static void photon(void)
 {
 
 
-	float local_heat[SHELLS];
-	float local_heat2[SHELLS];
+	float local_heat[SHELLS] = {[0 ... SHELLS-1] = 0.0f};
+	float local_heat2[SHELLS] = {[0 ... SHELLS-1] = 0.0f};
+	printf("Dolor:%f\n", local_heat[0]);
 	/* launch */
 	float x[VectSize] = {0.0f};
 	float y[VectSize] = {0.0f};
@@ -102,8 +103,8 @@ static void photon(void)
 	float r[VectSize] = {0.0f};
 	float u[VectSize] = {0.0f};
 	float v[VectSize] = {0.0f};
-	float w[VectSize] = {1.0f,1.0f,1.0f,1.0f ,1.0f,1.0f,1.0f,1.0f};//  ,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,  
-	// 1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f};
+	float w[VectSize] = {1.0f,1.0f,1.0f,1.0f ,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,  
+	 1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f};
 
 	float t[VectSize];
 	float xi1[VectSize], xi2[VectSize];
@@ -247,6 +248,7 @@ static void photon(void)
 		}
 
 	}
+	
 	for(unsigned int idx=0; idx < SHELLS; idx++) {
 		heat[idx] += local_heat[idx];
 		heat2[idx] += local_heat2[idx];
