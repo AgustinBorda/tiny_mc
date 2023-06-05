@@ -7,7 +7,7 @@
 
 #define _XOPEN_SOURCE 500  // M_PI
 
-#define VectSize 32 //Tamano del vector para SIMD
+#define VectSize 64 //Tamano del vector para SIMD
 
 #include "params.h"
 #include "wtime.h"
