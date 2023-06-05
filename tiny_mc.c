@@ -94,6 +94,8 @@ static void photon(void)
 {
 
 
+	float local_heat[SHELLS];
+	float local_heat2[SHELLS];
 	/* launch */
 	float x[VectSize] = {0.0f};
 	float y[VectSize] = {0.0f};
@@ -176,8 +178,8 @@ static void photon(void)
 
 		for (int i=0;i<VectSize;i++) { //Cada foton del vector contribuye con la misma energia
 
-			heat[shell_2D[j][i]]  += (1.0f - albedo) * weight;
-			heat2[shell_2D[j][i]] += (1.0f - albedo) * (1.0f - albedo) * weight * weight;
+			local_heat[shell_2D[j][i]]  += (1.0f - albedo) * weight;
+			local_heat2[shell_2D[j][i]] += (1.0f - albedo) * (1.0f - albedo) * weight * weight;
 
 		}
 
@@ -213,8 +215,8 @@ static void photon(void)
 		}
 		/* Como loop general es abierto, deposito energia en cada paso  */    		    
 		for (unsigned int i=0;i<VectSize;i++) { 
-			heat[shell_1D[i]]  += (1.0f - albedo) * weight;
-			heat2[shell_1D[i]] += (1.0f - albedo) * (1.0f - albedo) * weight * weight;
+			local_heat[shell_1D[i]]  += (1.0f - albedo) * weight;
+			local_heat2[shell_1D[i]] += (1.0f - albedo) * (1.0f - albedo) * weight * weight;
 		}		    
 
 		weight *= albedo;  
@@ -248,7 +250,12 @@ static void photon(void)
 		}
 
 	}
-
+	for(unsigned int idx=0; idx < SHELLS; idx++) {
+		heat[idx] = local_heat[idx];
+		heat2[idx] = local_heat2[idx];
+		
+	}
+	
 
 
 }
@@ -275,7 +282,7 @@ int main(void)
 	double start = wtime();
 	// simulation
 	unsigned int PHOTONS_M = (unsigned int) PHOTONS / VectSize;
-	#pragma omp parallel for reduction (+:heat, heat2)
+	#pragma omp parallel for reduction (+: heat, heat2)
 	for (unsigned int i = 0; i < PHOTONS_M; ++i) {
 		photon();
 	}
@@ -288,15 +295,15 @@ int main(void)
 	printf("# %lf K photons per second\n#\n", 1e-3 * PHOTONS / elapsed);
 
 
-	printf("# Radius\tHeat\n");
-	printf("# [microns]\t[W/cm^3]\tError\n");
-	float t = 4.0f * M_PI * powf(MICRONS_PER_SHELL, 3.0f) * PHOTONS / 1e12;
-	//    for (unsigned int i = 0; i < SHELLS - 1; ++i) {
-	//        printf("%6.0f\t%12.5f\t%12.5f\n", i * (float)MICRONS_PER_SHELL,
-	//               heat[i] / t / (i * i + i + 1.0 / 3.0),
-	//               sqrt(heat2[i] - heat[i] * heat[i] / PHOTONS) / t / (i * i + i + 1.0f / 3.0f));
-	//    }
-	//    printf("# extra\t%12.5f\n", heat[SHELLS - 1] / PHOTONS);
+//	printf("# Radius\tHeat\n");
+//	printf("# [microns]\t[W/cm^3]\tError\n");
+//	float t = 4.0f * M_PI * powf(MICRONS_PER_SHELL, 3.0f) * PHOTONS / 1e12;
+//	for (unsigned int i = 0; i < SHELLS - 1; ++i) {
+//		printf("%6.0f\t%12.5f\t%12.5f\n", i * (float)MICRONS_PER_SHELL,
+//		heat[i] / t / (i * i + i + 1.0 / 3.0),
+//	        sqrt(heat2[i] - heat[i] * heat[i] / PHOTONS) / t / (i * i + i + 1.0f / 3.0f));
+//	}
+//	printf("# extra\t%12.5f\n", heat[SHELLS - 1] / PHOTONS);
 
 
 	return 0;
